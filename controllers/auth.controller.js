@@ -23,13 +23,13 @@ export const signup = async(req, res) => {
     const { email, password, name } = req.body;
     const userExists = await User.findOne({ email });
     
-    if (!userExists) return res.json("user already exits");
+    if (userExists) return res.json("user already exits");
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashedPassword });
 
     await generateToken(user._id);
 
-    res.status(201).json({user, message:"user created!"});
+    res.status(201).json({user, token, message:"user created!"});
     
 }
 export const login = async(req, res) => {
@@ -41,11 +41,11 @@ export const login = async(req, res) => {
         const user = await User.findOne({ email });
         if (!user) return res.json("invalid email or password");
 
-        const passwordMatch = comparePassword(password, user.password);
+        const passwordMatch = await comparePassword(password, user.password);
 
         if (!passwordMatch) return res.json("password do not match!");
         await generateToken(user._id);
-        res.json({user, message:"login successful"});
+        res.json({user, token,message:"login successful"});
     } catch (error) {
         console.log("error in login controller");
     }
